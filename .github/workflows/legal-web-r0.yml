@@ -1,0 +1,45 @@
+name: MercaTax Web Legal Readiness R0
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  legal-web-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify public legal resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s index.html
+          test -s terms.html
+          test -s privacy.html
+          test -s legal.css
+          grep -Fq 'data-mercatax-legal-footer="r0"' index.html
+          grep -Fq 'href="/terms.html"' index.html
+          grep -Fq 'href="/privacy.html"' index.html
+          grep -Fq 'Términos y Condiciones' terms.html
+          grep -Fq 'Política de Privacidad' privacy.html
+          grep -Fq 'FormSubmit' privacy.html
+          grep -Fq 'mercataxpr@gmail.com' privacy.html
+
+      - name: Guard MercaTax Web product boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'sitio web corporativo de MercaTax' privacy.html
+          grep -Fq 'aplicaciones, plataformas o productos de MercaTax pueden tener políticas de privacidad propias' privacy.html
+          grep -Fq 'sitio web corporativo de MercaTax' terms.html
