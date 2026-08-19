@@ -28,37 +28,5 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Temporary R1-B homepage source audit
-        shell: bash
-        run: |
-          python - <<'PY'
-          import html
-          import re
-          from pathlib import Path
-          src = Path('index.html').read_text(encoding='utf-8')
-          print(f'INDEX_BYTES={len(src.encode("utf-8"))}')
-          canon = re.findall(r'<link\b[^>]*\brel=["\']canonical["\'][^>]*>', src, flags=re.I)
-          print(f'CANONICAL_TAGS={len(canon)}')
-          for i, tag in enumerate(canon, 1): print(f'CANONICAL_{i}={tag}')
-          heading_re = re.compile(r'<h([1-6])\b([^>]*)>(.*?)</h\1\s*>', re.I | re.S)
-          headings = list(heading_re.finditer(src))
-          print(f'HEADING_COUNT={len(headings)}')
-          for i, m in enumerate(headings, 1):
-              text = re.sub(r'<[^>]+>', '', m.group(3))
-              text = ' '.join(html.unescape(text).split())
-              print(f'--- HEADING_{i} h{m.group(1)} ---')
-              print('ATTRS=' + m.group(2)[:1000])
-              print('TEXT=' + repr(text))
-              print('INNER=' + m.group(3)[:1500].replace('\n', '\\n'))
-              a=max(0,m.start()-500); b=min(len(src),m.end()+500)
-              print('CONTEXT=' + src[a:b].replace('\n','\\n'))
-          for needle in ['MercaTax', 'Accounting', 'Finance', 'Organize', 'Better visibility', 'Build', 'Practical technology', 'PUERTO RICO']:
-              print(f'=== MATCHES {needle!r} ===')
-              for j, m in enumerate(re.finditer(re.escape(needle), src, flags=re.I), 1):
-                  a=max(0,m.start()-700); b=min(len(src),m.end()+700)
-                  print(f'MATCH_{j}=' + src[a:b].replace('\n','\\n'))
-                  if j >= 5: break
-          PY
-
       - name: Validate static SEO contract
         run: python scripts/seo_r1_validate.py
