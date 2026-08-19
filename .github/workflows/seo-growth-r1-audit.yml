@@ -14,77 +14,19 @@ on:
       - '.github/workflows/seo-growth-r1-audit.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate-seo:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout candidate branch
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: nova/seo-growth-r1-20260819
-          fetch-depth: 0
 
       - name: Use Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Apply exact R1-B semantic-only homepage patch
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          path = Path('index.html')
-          src = path.read_text(encoding='utf-8')
-
-          if re.search(r'<link\b[^>]*\brel=["\']canonical["\'][^>]*>', src, flags=re.I):
-              print('Homepage already has canonical; patch step will validate current state.')
-          else:
-              m = re.search(r'</title>', src, flags=re.I)
-              if not m:
-                  raise SystemExit('Homepage </title> not found')
-              src = src[:m.end()] + '\n<link rel="canonical" href="https://www.mercatax.com/">' + src[m.end():]
-
-          replacements = [
-              ('<h1 id="heroTitle"></h1>', '<h1 id="heroTitle">Accounting expertise. Practical technology. Better business.</h1>'),
-              ('<h2 id="servicesT"></h2>', '<h2 id="servicesT">Built around the work businesses actually need.</h2>'),
-              ('<h2 id="techT"></h2>', '<h2 id="techT">Digital tools shaped by real operational problems.</h2>'),
-              ('<h2 id="resT"></h2>', '<h2 id="resT">Quick access to essential Puerto Rico business portals.</h2>'),
-              ('<h2 id="aboutT"></h2>', '<h2 id="aboutT">Accounting knowledge with a practical technology mindset.</h2>'),
-              ('<h2 id="contactT"></h2>', '<h2 id="contactT">Have a question or want to discuss your business?</h2>'),
-          ]
-          for old, new in replacements:
-              if old in src:
-                  if src.count(old) != 1:
-                      raise SystemExit(f'Guard failed: duplicate source marker {old!r}')
-                  src = src.replace(old, new, 1)
-              elif new not in src:
-                  raise SystemExit(f'Guard failed: neither old nor expected new marker found for {old!r}')
-
-          path.write_text(src, encoding='utf-8')
-          PY
-
       - name: Validate static SEO contract
-        shell: bash
-        run: |
-          python scripts/seo_r1_validate.py | tee /tmp/seo-r1b.txt
-          grep -q 'RESULT: errors=0 warnings=0' /tmp/seo-r1b.txt
-
-      - name: Commit homepage-only remediation when needed
-        shell: bash
-        run: |
-          if git diff --quiet -- index.html; then
-            echo 'No homepage patch commit needed.'
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git diff --cached --check
-          git diff --cached --stat
-          git commit -m "fix(seo): close homepage semantic blockers"
-          git push origin HEAD:nova/seo-growth-r1-20260819
+        run: python scripts/seo_r1_validate.py
