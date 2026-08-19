@@ -1,4 +1,4 @@
-name: SEO R1-B Temporary Source Audit
+name: SEO R1-B Guarded Homepage Remediation
 
 on:
   push:
@@ -6,50 +6,109 @@ on:
       - nova/seo-growth-r1-20260819
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  audit-homepage-source:
+  remediate-homepage:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Inspect homepage semantic source
+      - name: Checkout candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: nova/seo-growth-r1-20260819
+          fetch-depth: 0
+
+      - name: Apply exact semantic-only homepage patch
         shell: bash
         run: |
           python - <<'PY'
-          import html
+          from pathlib import Path
           import re
+
+          path = Path('index.html')
+          src = path.read_text(encoding='utf-8')
+          before = src
+
+          canonical_tags = re.findall(r'<link\b[^>]*\brel=["\']canonical["\'][^>]*>', src, flags=re.I)
+          if canonical_tags:
+              raise SystemExit(f'Expected zero canonical tags before R1-B, found {len(canonical_tags)}')
+
+          title_match = re.search(r'</title>', src, flags=re.I)
+          if not title_match:
+              raise SystemExit('Homepage </title> not found')
+          src = src[:title_match.end()] + '\n<link rel="canonical" href="https://www.mercatax.com/">' + src[title_match.end():]
+
+          replacements = [
+              ('<h1 id="heroTitle"></h1>', '<h1 id="heroTitle">Accounting expertise. Practical technology. Better business.</h1>'),
+              ('<h2 id="servicesT"></h2>', '<h2 id="servicesT">Built around the work businesses actually need.</h2>'),
+              ('<h2 id="techT"></h2>', '<h2 id="techT">Digital tools shaped by real operational problems.</h2>'),
+              ('<h2 id="resT"></h2>', '<h2 id="resT">Quick access to essential Puerto Rico business portals.</h2>'),
+              ('<h2 id="aboutT"></h2>', '<h2 id="aboutT">Accounting knowledge with a practical technology mindset.</h2>'),
+              ('<h2 id="contactT"></h2>', '<h2 id="contactT">Have a question or want to discuss your business?</h2>'),
+          ]
+
+          for old, new in replacements:
+              count = src.count(old)
+              if count != 1:
+                  raise SystemExit(f'Guard failed for {old!r}: expected exactly 1 occurrence, found {count}')
+              src = src.replace(old, new, 1)
+
+          if src == before:
+              raise SystemExit('No homepage changes were produced')
+
+          path.write_text(src, encoding='utf-8')
+          print('R1-B_PATCH_APPLIED=1')
+          print('R1-B_SCOPE=canonical+existing-heading-fallback-text-only')
+          PY
+
+      - name: Validate exact R1-B semantic contract
+        shell: bash
+        run: |
+          python scripts/seo_r1_validate.py | tee /tmp/seo-r1b.txt
+          grep -q 'RESULT: errors=0 warnings=0' /tmp/seo-r1b.txt
+          python - <<'PY'
+          from html.parser import HTMLParser
           from pathlib import Path
 
-          src = Path('index.html').read_text(encoding='utf-8')
-          print(f'INDEX_BYTES={len(src.encode("utf-8"))}')
+          class P(HTMLParser):
+              def __init__(self):
+                  super().__init__(convert_charrefs=True)
+                  self.stack=[]; self.headings=[]; self.canon=[]
+              def handle_starttag(self, tag, attrs):
+                  a=dict(attrs); t=tag.lower()
+                  if t in {'h1','h2','h3','h4','h5','h6'}:
+                      self.stack.append([t, []])
+                  if t=='link' and (a.get('rel') or '').lower()=='canonical':
+                      self.canon.append((a.get('href') or '').strip())
+              def handle_data(self, data):
+                  for item in self.stack: item[1].append(data)
+              def handle_endtag(self, tag):
+                  t=tag.lower()
+                  if self.stack and self.stack[-1][0]==t:
+                      level, buf=self.stack.pop(); self.headings.append((level,' '.join(''.join(buf).split())))
 
-          canon = re.findall(r'<link\b[^>]*\brel=["\']canonical["\'][^>]*>', src, flags=re.I)
-          print(f'CANONICAL_TAGS={len(canon)}')
-          for i, tag in enumerate(canon, 1):
-              print(f'CANONICAL_{i}={tag}')
-
-          heading_re = re.compile(r'<h([1-6])\b([^>]*)>(.*?)</h\1\s*>', re.I | re.S)
-          headings = list(heading_re.finditer(src))
-          print(f'HEADING_COUNT={len(headings)}')
-          for i, m in enumerate(headings, 1):
-              text = re.sub(r'<[^>]+>', '', m.group(3))
-              text = html.unescape(text)
-              text = ' '.join(text.split())
-              print(f'--- HEADING_{i} h{m.group(1)} ---')
-              print('ATTRS=' + m.group(2)[:1000])
-              print('TEXT=' + repr(text))
-              print('INNER=' + m.group(3)[:1500].replace('\n', '\\n'))
-              a = max(0, m.start() - 500)
-              b = min(len(src), m.end() + 500)
-              print('CONTEXT=' + src[a:b].replace('\n', '\\n'))
-
-          for needle in ['MercaTax', 'Accounting', 'Finance', 'Organize', 'Better visibility', 'Build', 'Practical technology', 'PUERTO RICO']:
-              print(f'=== MATCHES {needle!r} ===')
-              for j, m in enumerate(re.finditer(re.escape(needle), src, flags=re.I), 1):
-                  a = max(0, m.start() - 700)
-                  b = min(len(src), m.end() + 700)
-                  print(f'MATCH_{j}=' + src[a:b].replace('\n', '\\n'))
-                  if j >= 5:
-                      break
+          p=P(); p.feed(Path('index.html').read_text(encoding='utf-8'))
+          h1=[x for level,x in p.headings if level=='h1']
+          empty=[level for level,x in p.headings if not x]
+          assert len(h1)==1 and h1[0], h1
+          assert not empty, empty
+          assert p.canon==['https://www.mercatax.com/'], p.canon
+          print(f'H1_COUNT={len(h1)}')
+          print(f'H1_TEXT={h1[0]}')
+          print(f'EMPTY_HEADINGS={len(empty)}')
+          print(f'CANONICAL_COUNT={len(p.canon)}')
+          print(f'CANONICAL_URL={p.canon[0]}')
           PY
+
+      - name: Commit homepage patch and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/seo-r1b-temp-audit.yml
+          git add index.html
+          git diff --cached --check
+          git diff --cached --stat
+          git commit -m "fix(seo): close homepage semantic blockers"
+          git push origin HEAD:nova/seo-growth-r1-20260819
