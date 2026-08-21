@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dependency-free SEO Growth R1 validation for the static MercaTax site."""
+"""Dependency-free SEO Growth R1/R2 validation for the static MercaTax site."""
 
 from __future__ import annotations
 
@@ -15,19 +15,65 @@ CANONICAL_ORIGIN = "https://www.mercatax.com"
 
 PAGES = {
     "accounting-finance/index.html": f"{CANONICAL_ORIGIN}/accounting-finance/",
+    "servicios-contabilidad-puerto-rico/index.html": f"{CANONICAL_ORIGIN}/servicios-contabilidad-puerto-rico/",
     "business-services/index.html": f"{CANONICAL_ORIGIN}/business-services/",
+    "servicios-negocios-puerto-rico/index.html": f"{CANONICAL_ORIGIN}/servicios-negocios-puerto-rico/",
     "technology-services/index.html": f"{CANONICAL_ORIGIN}/technology-services/",
+    "automatizacion-negocios-puerto-rico/index.html": f"{CANONICAL_ORIGIN}/automatizacion-negocios-puerto-rico/",
     "resources/index.html": f"{CANONICAL_ORIGIN}/resources/",
+    "recursos-puerto-rico/index.html": f"{CANONICAL_ORIGIN}/recursos-puerto-rico/",
     "privacy.html": f"{CANONICAL_ORIGIN}/privacy.html",
     "terms.html": f"{CANONICAL_ORIGIN}/terms.html",
 }
 
+PAGE_LANG = {
+    "accounting-finance/index.html": "en",
+    "servicios-contabilidad-puerto-rico/index.html": "es-PR",
+    "business-services/index.html": "en",
+    "servicios-negocios-puerto-rico/index.html": "es-PR",
+    "technology-services/index.html": "en",
+    "automatizacion-negocios-puerto-rico/index.html": "es-PR",
+    "resources/index.html": "en",
+    "recursos-puerto-rico/index.html": "es-PR",
+}
+
+LANG_PAIRS = [
+    (
+        "accounting-finance/index.html",
+        "servicios-contabilidad-puerto-rico/index.html",
+        f"{CANONICAL_ORIGIN}/accounting-finance/",
+        f"{CANONICAL_ORIGIN}/servicios-contabilidad-puerto-rico/",
+    ),
+    (
+        "business-services/index.html",
+        "servicios-negocios-puerto-rico/index.html",
+        f"{CANONICAL_ORIGIN}/business-services/",
+        f"{CANONICAL_ORIGIN}/servicios-negocios-puerto-rico/",
+    ),
+    (
+        "technology-services/index.html",
+        "automatizacion-negocios-puerto-rico/index.html",
+        f"{CANONICAL_ORIGIN}/technology-services/",
+        f"{CANONICAL_ORIGIN}/automatizacion-negocios-puerto-rico/",
+    ),
+    (
+        "resources/index.html",
+        "recursos-puerto-rico/index.html",
+        f"{CANONICAL_ORIGIN}/resources/",
+        f"{CANONICAL_ORIGIN}/recursos-puerto-rico/",
+    ),
+]
+
 EXPECTED_SITEMAP = {
     f"{CANONICAL_ORIGIN}/",
     f"{CANONICAL_ORIGIN}/accounting-finance/",
+    f"{CANONICAL_ORIGIN}/servicios-contabilidad-puerto-rico/",
     f"{CANONICAL_ORIGIN}/business-services/",
+    f"{CANONICAL_ORIGIN}/servicios-negocios-puerto-rico/",
     f"{CANONICAL_ORIGIN}/technology-services/",
+    f"{CANONICAL_ORIGIN}/automatizacion-negocios-puerto-rico/",
     f"{CANONICAL_ORIGIN}/resources/",
+    f"{CANONICAL_ORIGIN}/recursos-puerto-rico/",
     f"{CANONICAL_ORIGIN}/privacy.html",
     f"{CANONICAL_ORIGIN}/terms.html",
 }
@@ -36,9 +82,11 @@ EXPECTED_SITEMAP = {
 class SEOParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
+        self.html_lang = ""
         self.title = ""
         self.description = ""
         self.canonical = ""
+        self.alternates: dict[str, str] = {}
         self.og = {}
         self.twitter = {}
         self.headings = []
@@ -52,7 +100,9 @@ class SEOParser(HTMLParser):
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         tag = tag.lower()
-        if tag == "title":
+        if tag == "html":
+            self.html_lang = (attrs.get("lang") or "").strip()
+        elif tag == "title":
             self._capture = "title"
             self._buffer = []
         elif tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
@@ -68,8 +118,13 @@ class SEOParser(HTMLParser):
                 self.og[prop] = content
             if name.startswith("twitter:"):
                 self.twitter[name] = content
-        elif tag == "link" and (attrs.get("rel") or "").lower() == "canonical":
-            self.canonical = (attrs.get("href") or "").strip()
+        elif tag == "link":
+            rel = (attrs.get("rel") or "").lower().split()
+            href = (attrs.get("href") or "").strip()
+            if "canonical" in rel:
+                self.canonical = href
+            if "alternate" in rel and attrs.get("hreflang") and href:
+                self.alternates[(attrs.get("hreflang") or "").strip()] = href
         elif tag == "script" and (attrs.get("type") or "").lower() == "application/ld+json":
             self._jsonld_active = True
             self._jsonld_buffer = []
@@ -136,8 +191,9 @@ def validate() -> int:
     errors: list[str] = []
     warnings: list[str] = []
     titles: dict[str, str] = {}
+    parsed: dict[str, SEOParser] = {}
 
-    print("== SEO Growth R1 static validation ==")
+    print("== SEO Growth R1/R2 static validation ==")
 
     for rel, expected_canonical in PAGES.items():
         path = ROOT / rel
@@ -145,7 +201,12 @@ def validate() -> int:
             fail(f"Missing required page: {rel}", errors)
             continue
         parser = parse_page(rel)
+        parsed[rel] = parser
         print(f"PAGE: {rel}")
+
+        expected_lang = PAGE_LANG.get(rel)
+        if expected_lang and parser.html_lang != expected_lang:
+            fail(f"{rel}: html lang {parser.html_lang!r} != {expected_lang!r}", errors)
 
         if not parser.title:
             fail(f"{rel}: missing title", errors)
@@ -185,6 +246,17 @@ def validate() -> int:
             if not local_target_exists(href):
                 fail(f"{rel}: broken local link target {href}", errors)
 
+    for en_rel, es_rel, en_url, es_url in LANG_PAIRS:
+        en = parsed.get(en_rel)
+        es = parsed.get(es_rel)
+        if not en or not es:
+            continue
+        expected = {"en-US": en_url, "es-PR": es_url, "x-default": en_url}
+        if en.alternates != expected:
+            fail(f"{en_rel}: hreflang set mismatch actual={en.alternates}", errors)
+        if es.alternates != expected:
+            fail(f"{es_rel}: hreflang set mismatch actual={es.alternates}", errors)
+
     robots = (ROOT / "robots.txt").read_text(encoding="utf-8")
     if "User-agent: *" not in robots or "Allow: /" not in robots:
         fail("robots.txt does not allow normal crawling", errors)
@@ -196,7 +268,7 @@ def validate() -> int:
         tree = ET.parse(sitemap_path)
         ns = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
         locs = {el.text.strip() for el in tree.findall("sm:url/sm:loc", ns) if el.text}
-    except Exception as exc:  # pragma: no cover - gate should show parse error
+    except Exception as exc:  # pragma: no cover
         fail(f"sitemap.xml parse failed: {exc}", errors)
         locs = set()
 
@@ -210,11 +282,10 @@ def validate() -> int:
     if not (ROOT / "seo-pages.css").exists():
         fail("Missing shared seo-pages.css", errors)
 
-    # Homepage source is audited but intentionally not made a hard gate in R1.
     home = parse_page("index.html")
     home_h1 = [text for level, text in home.headings if level == "h1" and text]
     empty_home_headings = [level for level, text in home.headings if not text]
-    print("== Homepage audit (non-blocking until safe source edit) ==")
+    print("== Homepage audit ==")
     print(f"title={home.title!r}")
     print(f"description_present={bool(home.description)} canonical={home.canonical!r}")
     print(f"non_empty_h1={home_h1}")
@@ -223,13 +294,13 @@ def validate() -> int:
         warn("homepage does not currently expose exactly one non-empty H1", warnings)
     if empty_home_headings:
         warn(f"homepage contains {len(empty_home_headings)} empty semantic heading(s)", warnings)
-    if not home.canonical:
-        warn("homepage has no self-referencing canonical in parsed source", warnings)
+    if home.canonical != f"{CANONICAL_ORIGIN}/":
+        warn("homepage self-referencing canonical is missing or incorrect", warnings)
 
     print(f"RESULT: errors={len(errors)} warnings={len(warnings)}")
     if errors:
         return 1
-    print("PASS: SEO Growth R1 static validation passed; homepage audit warnings are documented separately.")
+    print("PASS: SEO Growth R1/R2 static validation passed.")
     return 0
 
 
