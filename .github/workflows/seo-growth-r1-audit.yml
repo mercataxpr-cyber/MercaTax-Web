@@ -1,4 +1,4 @@
-name: SEO Growth R1 Audit
+name: SEO Growth R1 R2 Audit
 
 on:
   push:
@@ -28,5 +28,5 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate static SEO contract
+      - name: Validate bilingual static SEO contract
         run: python scripts/seo_r1_validate.py
