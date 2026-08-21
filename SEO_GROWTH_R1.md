@@ -1,154 +1,136 @@
-# ♤ NOVA — MERCATAX SEO GROWTH R1
+# ♤ NOVA — MERCATAX SEO GROWTH R1 + R2
 
 ## Scope
 
 Repository: `mercataxpr-cyber/MercaTax-Web`  
 Branch: `nova/seo-growth-r1-20260819`  
 Base SHA: `1ba3f971930225458f7bdc82f2d1b64f66dfeb82`  
-Production deployment: **NOT AUTHORIZED**
+Production promotion: **only after validation and hosting gate are green**
 
-This R1 preserves the current MercaTax visual identity and focuses on crawlability, canonical URLs, service architecture, internal linking, metadata, structured data, and a scalable resources foundation.
+This branch preserves the current MercaTax visual identity and focuses on crawlability, canonical URLs, service architecture, bilingual Puerto Rico search discovery, internal linking, metadata, structured data, and a scalable resources foundation.
 
-## Initial audit
+## R1 foundation
 
-### Already implemented / valid
+R1 established the English commercial architecture:
 
-- `robots.txt` already allows crawling and references the absolute canonical sitemap URL: `https://www.mercatax.com/sitemap.xml`.
-- The sitemap already used the preferred `https://www.mercatax.com/` homepage URL and no longer listed `/index.html` as a second homepage.
-- `privacy.html` and `terms.html` already existed, contained substantial visible content, had one visible H1 each, and were cross-linked.
-- The site already had responsive viewport metadata and a stable visual identity.
-
-### Gaps addressed in this branch
-
-- No dedicated crawlable landing pages existed for the three confirmed public service pillars: Accounting & Finance, Business, and Technology.
-- There was no scalable `/resources/` content hub.
-- Legal pages lacked self-referencing canonical tags and social metadata.
-- The sitemap did not include service/category landing pages because those routes did not yet exist.
-- The new service pages needed unique titles, descriptions, canonicals, social metadata, semantic headings, internal links, and structured data.
-
-### Risk-controlled hold
-
-The current root `index.html` is a large generated/static artifact. The connected repository interface did not expose a safe complete editable representation suitable for replacing that file without risking the approved homepage design or functionality. Because this R1 explicitly prohibits unnecessary redesign/regression, the homepage semantic rewrite is **not forced in this branch**.
-
-Pending homepage items for a later safe edit:
-
-- verify/add a single descriptive H1;
-- normalize H2/H3 hierarchy and remove empty headings;
-- verify/add self-canonical;
-- verify/complete Open Graph and Twitter metadata;
-- add Organization/WebSite structured data if not already present in the complete source;
-- add contextual links from the homepage to the new service and resources routes;
-- preserve the existing visual design exactly.
-
-## SEO / Content Map
-
-| URL | Purpose / intent | Query theme (conceptual, not search-volume validated) | Title | H1 | Primary CTA |
-|---|---|---|---|---|---|
-| `/` | Brand + multi-service discovery | MercaTax Puerto Rico; accounting business technology Puerto Rico | Existing title retained in R1; later safe target: `MercaTax | Accounting, Business & Technology in Puerto Rico` | Pending safe homepage source edit | Existing homepage CTA |
-| `/accounting-finance/` | Commercial service discovery | accounting support Puerto Rico; accounting services Puerto Rico; financial organization Puerto Rico | `Accounting & Finance Support in Puerto Rico | MercaTax` | `Accounting & Finance Support for Puerto Rico Businesses` | Talk with MercaTax |
-| `/business-services/` | Commercial service discovery | business services Puerto Rico; business operations Puerto Rico; business systems Puerto Rico | `Business Services in Puerto Rico | MercaTax` | `Practical Business Support in Puerto Rico` | Talk with MercaTax |
-| `/technology-services/` | Commercial service discovery | technology solutions Puerto Rico; business automation Puerto Rico; digital tools Puerto Rico | `Business Technology & Automation in Puerto Rico | MercaTax` | `Technology & Automation for Puerto Rico Businesses` | Talk with MercaTax |
-| `/resources/` | Informational discovery hub | Puerto Rico business resources; accounting operations technology resources | `Business Resources for Puerto Rico | MercaTax` | `Practical Resources for Puerto Rico Businesses` | Contact MercaTax / explore services |
-| `/privacy.html` | Legal / trust | privacy policy MercaTax | `Política de Privacidad | MercaTax` | `Política de Privacidad` | Return to site |
-| `/terms.html` | Legal / trust | terms MercaTax | `Términos y Condiciones | MercaTax` | `Términos y Condiciones` | Return to site |
-
-## Technical SEO implemented
-
-### Canonical and social metadata
-
-New service/resources pages include:
-
-- unique `<title>`;
-- unique meta description;
-- self-referencing canonical;
-- Open Graph title, description, URL, site name, image;
-- Twitter card title, description, and image;
-- responsive viewport.
-
-Legal pages now include self-referencing canonicals plus Open Graph/Twitter metadata.
-
-### Structured data
-
-New service pages include:
-
-- `Organization`;
-- `Service`;
-- `BreadcrumbList`.
-
-The resources hub includes:
-
-- `Organization`;
-- `WebSite`;
-- `CollectionPage`;
-- `BreadcrumbList`.
-
-Only confirmed information is used. No address, phone, hours, ratings, reviews, awards, or social profiles were invented.
-
-### Sitemap
-
-The branch sitemap now lists only intended canonical public URLs:
-
-- `/`
 - `/accounting-finance/`
 - `/business-services/`
 - `/technology-services/`
 - `/resources/`
+
+It also added unique titles/descriptions, self-canonicals, Open Graph/Twitter metadata, semantic headings, internal links, JSON-LD, sitemap coverage, legal-page metadata, and an automated SEO gate.
+
+The homepage semantic blockers were later closed safely without redesign: one non-empty H1, non-empty section headings, and the preferred `https://www.mercatax.com/` canonical.
+
+## R2 — Spanish + Puerto Rico search layer
+
+R2 adds four independent Spanish (`es-PR`) canonical routes aimed at real Puerto Rico commercial/search intent without making unverified regulated claims:
+
+| URL | Search intent | Title | H1 |
+|---|---|---|---|
+| `/servicios-contabilidad-puerto-rico/` | servicios de contabilidad Puerto Rico; bookkeeping para negocios; contabilidad para pequeños y medianos negocios | `Servicios de Contabilidad para Negocios en Puerto Rico | MercaTax` | `Servicios de Contabilidad para Negocios en Puerto Rico` |
+| `/servicios-negocios-puerto-rico/` | servicios para negocios Puerto Rico; sistemas y procesos de negocio | `Servicios para Negocios en Puerto Rico | MercaTax` | `Servicios y Sistemas para Negocios en Puerto Rico` |
+| `/automatizacion-negocios-puerto-rico/` | automatización negocios Puerto Rico; tecnología para negocios; procesos digitales | `Automatización para Negocios en Puerto Rico | MercaTax` | `Automatización y Tecnología para Negocios en Puerto Rico` |
+| `/recursos-puerto-rico/` | recursos para negocios Puerto Rico; contabilidad, operaciones y tecnología | `Recursos para Negocios en Puerto Rico | MercaTax` | `Recursos Prácticos para Negocios en Puerto Rico` |
+
+### Bilingual architecture
+
+Each English/Spanish pair uses reciprocal hreflang:
+
+- `en-US`
+- `es-PR`
+- `x-default` → English canonical
+
+Each page remains self-canonical. The language versions are linked visibly so users and crawlers can move between them.
+
+### Structured data
+
+Spanish commercial pages use only confirmed data and include:
+
+- `Organization`
+- `Service`
+- `BreadcrumbList`
+
+The Spanish resources hub includes:
+
+- `Organization`
+- `WebSite`
+- `CollectionPage`
+- `BreadcrumbList`
+
+No address, phone, hours, ratings, reviews, licenses, CPA status, awards, or other real-world facts are invented.
+
+## Sitemap
+
+The branch sitemap contains the intended canonical public set:
+
+- `/`
+- `/accounting-finance/`
+- `/servicios-contabilidad-puerto-rico/`
+- `/business-services/`
+- `/servicios-negocios-puerto-rico/`
+- `/technology-services/`
+- `/automatizacion-negocios-puerto-rico/`
+- `/resources/`
+- `/recursos-puerto-rico/`
 - `/terms.html`
 - `/privacy.html`
 
-No `/index.html` duplicate is listed.
+`/index.html` remains excluded as a duplicate homepage URL.
 
-### Internal linking
+## Search intent and content quality
 
-Each new commercial page links to the other service pillars, resources, and homepage. The resources hub links back to all three service pillars. Legal pages remain reachable and cross-linked.
+The Spanish layer reflects current Puerto Rico search-result language around accounting/bookkeeping, small and medium businesses, operating systems, and business automation. It does not copy competitor text and does not claim services MercaTax has not established publicly.
 
-## Content quality rules
+Rules:
 
-- No mass-generated article set was created.
-- No invented tax, legal, accounting, or regulatory claims were published.
-- The resources hub explicitly requires future regulated-content articles to be checked against current authoritative sources and professional review when needed.
-- Keyword themes in this document are conceptual targeting directions, not claims of measured search volume.
+- no mass-generated article set;
+- no keyword stuffing;
+- no invented tax, legal, accounting, licensing, or regulatory claims;
+- regulated-content resources must be checked against current authoritative sources before publication;
+- future article priorities should be informed by Search Console query/impression data.
 
-## Local SEO
+## Technical validation
 
-Implemented on-site:
+`scripts/seo_r1_validate.py` now validates the complete R1/R2 architecture:
 
-- natural Puerto Rico relevance in titles, headings, copy, and `areaServed` structured data on new service pages;
-- no location stuffing;
-- no invented NAP data.
+- required files exist;
+- unique titles;
+- meta descriptions;
+- exact self-canonicals;
+- one non-empty H1 per page;
+- no empty semantic headings;
+- OG/Twitter metadata;
+- valid JSON-LD;
+- local link targets;
+- exact sitemap URL set;
+- canonical host/scheme;
+- reciprocal English/Spanish hreflang pairs;
+- `html lang` values for bilingual pages;
+- homepage H1/headings/canonical audit.
 
-External follow-up required:
+## Google Search Console after production deployment
 
-- verify/complete Google Business Profile using real business data;
-- choose the primary Business Profile category based on the actual principal service, not SEO preference;
+1. Confirm all new URLs return production `200` responses.
+2. Re-submit `https://www.mercatax.com/sitemap.xml`.
+3. Inspect and request indexing for the eight commercial/resources URLs.
+4. Treat intentional host/protocol or `/index.html` redirects as canonicalization, not errors.
+5. Monitor Queries, Impressions, Clicks, CTR, Average Position, indexed pages, and Core Web Vitals.
+6. Use early Search Console query data to choose the first Spanish resource articles rather than publishing generic SEO content.
+
+## Local SEO external follow-up
+
+- complete/verify Google Business Profile with real business data;
+- choose the primary category based on the actual principal service;
 - confirm real phone, hours, service area, photos, and business description;
-- keep NAP data consistent wherever published;
+- maintain consistent NAP wherever real-world business information is published;
 - request only genuine client reviews.
 
-## Search Console follow-up after approved merge/deployment
+## Release gate
 
-1. Re-submit `https://www.mercatax.com/sitemap.xml`.
-2. Inspect the homepage and each new canonical service/resources URL.
-3. Request indexing for the new public pages after they return production `200` responses.
-4. Monitor Queries, Impressions, Clicks, CTR, and Average Position.
-5. Treat intentional protocol/host redirects as expected canonicalization; do not mark them fixed unless the redirect behavior is actually changed or incorrect.
-6. Recheck `privacy.html` and `terms.html` only after deployment and recrawl; they are low commercial-priority URLs.
+The code is eligible for production only when:
 
-## Performance / mobile
-
-The new pages use one small shared stylesheet, native HTML, no client-side framework, no analytics library, no webfont dependency, and no large hero image. They include responsive breakpoints, flexible grids, visible focus states, and mobile-width CTAs.
-
-Production Core Web Vitals must still be measured after preview/deployment because field metrics cannot be certified from repository source alone.
-
-## Pending / external
-
-- Safe homepage semantic/metadata edit once a complete editable source representation is available.
-- Production redirect verification for `/index.html` → `/` and host/protocol canonicalization should be performed against the deployed environment.
-- Google Search Console submission/index requests after approved production deployment.
-- Google Business Profile work with confirmed real-world business information.
-- Search-demand research using Search Console query data after the new pages begin receiving impressions.
-- Field Core Web Vitals and real mobile performance measurement after deployment.
-
-## Release rule
-
-This branch is a **preview/review candidate only**. Do not merge or deploy to production without explicit TEKI authorization.
+1. GitHub SEO validation passes;
+2. legal readiness remains green;
+3. the hosting/deployment provider can build the exact candidate successfully;
+4. production URLs can be checked after release before Search Console indexing requests are made.
