@@ -1,0 +1,33 @@
+name: SEO Growth R1 R2 Audit
+
+on:
+  push:
+    branches:
+      - nova/seo-growth-r1-20260819
+  pull_request:
+    paths:
+      - '**/*.html'
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - 'seo-pages.css'
+      - 'scripts/seo_r1_validate.py'
+      - '.github/workflows/seo-growth-r1-audit.yml'
+      - 'SEO_GROWTH_R1.md'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-seo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate bilingual static SEO contract
+        run: python scripts/seo_r1_validate.py
