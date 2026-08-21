@@ -12,6 +12,7 @@ on:
       - 'seo-pages.css'
       - 'scripts/seo_r1_validate.py'
       - '.github/workflows/seo-growth-r1-audit.yml'
+      - 'SEO_GROWTH_R1.md'
 
 permissions:
   contents: read
