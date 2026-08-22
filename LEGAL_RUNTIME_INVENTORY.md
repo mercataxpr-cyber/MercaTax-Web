@@ -4,7 +4,7 @@ Generated from the exact `index.html` candidate. This file is evidence for priva
 
 ## Known integration signatures
 
-- Google Analytics / gtag: not detected
+- Google Analytics / gtag: FOUND — G-36LMR9ZYWD
 - Google Tag Manager: not detected
 - Firebase: not detected
 - reCAPTCHA: not detected
@@ -22,6 +22,7 @@ Generated from the exact `index.html` candidate. This file is evidence for priva
 
 ## External hosts referenced by absolute URL
 
+- `www.googletagmanager.com`
 - `formsubmit.co`
 - `hacienda.pr.gov`
 - `mercatax.netlify.app`
