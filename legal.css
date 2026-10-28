@@ -36,3 +36,4 @@ p, li { color: var(--muted); }
   .legal-top { align-items: flex-start; flex-direction: column; }
   .legal-card { border-radius: 14px; }
 }
+.legal-action{display:inline-block;padding:.7rem 1.1rem;border:1px solid currentColor;border-radius:.6rem;font-weight:700;text-decoration:none}.legal-action:focus-visible{outline:3px solid currentColor;outline-offset:3px}
