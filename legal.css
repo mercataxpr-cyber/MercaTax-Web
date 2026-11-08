@@ -23,6 +23,7 @@ a:hover { text-decoration-thickness: 2px; }
 .legal-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 28px; }
 .brand { color: var(--text); text-decoration: none; font-weight: 800; letter-spacing: .02em; font-size: 1.15rem; }
 .back { color: var(--muted); text-decoration: none; font-size: .95rem; }
+.back-links { display: flex; flex-wrap: wrap; gap: 8px 18px; }
 .legal-card { background: color-mix(in srgb, var(--panel) 94%, transparent); border: 1px solid var(--line); border-radius: 20px; padding: clamp(24px, 5vw, 52px); box-shadow: 0 24px 80px rgba(0,0,0,.28); }
 h1 { font-size: clamp(2rem, 6vw, 3.25rem); line-height: 1.08; margin: 0 0 10px; }
 h2 { margin: 34px 0 10px; font-size: 1.3rem; }
